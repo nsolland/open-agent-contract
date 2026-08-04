@@ -40,7 +40,6 @@ def _explicit_values(values: list[str], field_name: str) -> list[str]:
 class EphemeralAgentStatus(str, Enum):
     DRAFT = "draft"
     ACTIVE = "active"
-    SUSPENDED = "suspended"
     REVOKED = "revoked"
     EXPIRED = "expired"
     TERMINATED = "terminated"
@@ -72,7 +71,7 @@ class AgentOrigin(BaseModel):
 
 
 class NeedToAskAcquireBinding(BaseModel):
-    """Bindings proving that the need was separately evaluated and cleared."""
+    """Proof that the need was separately evaluated, cleared and bound."""
 
     model_config = ConfigDict(frozen=True)
 
@@ -172,7 +171,9 @@ class OperatingMemoryLease(BaseModel):
         if not self.delete_on_termination:
             raise ValueError("ephemeral operating memory must be deleted on termination")
         if self.writeback_to_canonical_memory:
-            raise ValueError("operating memory cannot write back without a separate memory decision")
+            raise ValueError(
+                "operating memory cannot write back without a separate memory decision"
+            )
         if not self.zero_mem_receipt_required:
             raise ValueError("a deletion receipt is required")
         return self
@@ -211,6 +212,7 @@ class LifecycleWindow(BaseModel):
     expires_at: datetime
     deletion_due_at: datetime
     revoked_at: datetime | None = None
+    expired_at: datetime | None = None
     terminated_at: datetime | None = None
     deleted_at: datetime | None = None
 
@@ -220,6 +222,7 @@ class LifecycleWindow(BaseModel):
         "expires_at",
         "deletion_due_at",
         "revoked_at",
+        "expired_at",
         "terminated_at",
         "deleted_at",
     )
@@ -273,6 +276,23 @@ class IsolatedEphemeralAgentContract(BaseModel):
             raise ValueError("memory retention cannot outlive deletion_due_at")
         if self.origin.principal_id == self.agent_id:
             raise ValueError("the agent cannot be its own principal")
+
+        requirements = {
+            EphemeralAgentStatus.ACTIVE: ("activation", None),
+            EphemeralAgentStatus.REVOKED: ("revocation", self.lifecycle.revoked_at),
+            EphemeralAgentStatus.EXPIRED: ("expiration", self.lifecycle.expired_at),
+            EphemeralAgentStatus.TERMINATED: (
+                "termination",
+                self.lifecycle.terminated_at,
+            ),
+            EphemeralAgentStatus.DELETED: ("deletion", self.lifecycle.deleted_at),
+        }
+        if self.status in requirements:
+            receipt_name, timestamp = requirements[self.status]
+            if receipt_name not in self.receipt_ids:
+                raise ValueError(f"{self.status.value} status requires {receipt_name} receipt")
+            if self.status != EphemeralAgentStatus.ACTIVE and timestamp is None:
+                raise ValueError(f"{self.status.value} status requires lifecycle timestamp")
         return self
 
     def digest(self) -> str:
@@ -306,16 +326,13 @@ class EphemeralContractRegistry:
         contract = self._require(contract_id)
         if contract.status != EphemeralAgentStatus.DRAFT:
             raise ValueError("only draft contracts can be activated")
-        if now > contract.lifecycle.activate_by:
-            raise ValueError("activation window has expired")
-        updated = contract.model_copy(
-            update={
-                "status": EphemeralAgentStatus.ACTIVE,
-                "receipt_ids": {**contract.receipt_ids, "activation": receipt_id},
-            }
+        if now < contract.lifecycle.created_at or now > contract.lifecycle.activate_by:
+            raise ValueError("activation is outside the allowed window")
+        return self._replace(
+            contract,
+            status=EphemeralAgentStatus.ACTIVE,
+            receipt_ids={**contract.receipt_ids, "activation": receipt_id},
         )
-        self._contracts[contract_id] = updated
-        return updated
 
     def verify_execution_binding(
         self,
@@ -326,7 +343,7 @@ class EphemeralContractRegistry:
         resource: str | None = None,
         now: datetime | None = None,
     ) -> dict[str, Any]:
-        """Check contract bindings only. REHT/RACS must still authorize the action."""
+        """Check bindings only. REHT/RACS must still authorize each action."""
         now = _require_aware(now or utcnow(), "now")
         contract = self._require(contract_id)
         issues: list[str] = []
@@ -347,6 +364,7 @@ class EphemeralContractRegistry:
             "reht_clearance_id": contract.need_binding.reht_clearance_id,
             "racs_decision_id": contract.need_binding.racs_decision_id,
             "gateway_enforcement_id": contract.isolation.gateway_enforcement_id,
+            "requires_per_action_authorization": True,
         }
 
     def revoke(
@@ -366,16 +384,30 @@ class EphemeralContractRegistry:
         }:
             raise ValueError("contract is already closed")
         lifecycle = contract.lifecycle.model_copy(update={"revoked_at": now})
-        updated = contract.model_copy(
-            update={
-                "status": EphemeralAgentStatus.REVOKED,
-                "lifecycle": lifecycle,
-                "termination_reason": reason,
-                "receipt_ids": {**contract.receipt_ids, "revocation": receipt_id},
-            }
+        return self._replace(
+            contract,
+            status=EphemeralAgentStatus.REVOKED,
+            lifecycle=lifecycle,
+            termination_reason=reason,
+            receipt_ids={**contract.receipt_ids, "revocation": receipt_id},
         )
-        self._contracts[contract_id] = updated
-        return updated
+
+    def expire(
+        self, contract_id: str, receipt_id: str, now: datetime | None = None
+    ) -> IsolatedEphemeralAgentContract:
+        now = _require_aware(now or utcnow(), "now")
+        contract = self._require(contract_id)
+        if contract.status != EphemeralAgentStatus.ACTIVE:
+            raise ValueError("only active contracts can expire")
+        if now < contract.lifecycle.expires_at:
+            raise ValueError("contract has not reached expires_at")
+        lifecycle = contract.lifecycle.model_copy(update={"expired_at": now})
+        return self._replace(
+            contract,
+            status=EphemeralAgentStatus.EXPIRED,
+            lifecycle=lifecycle,
+            receipt_ids={**contract.receipt_ids, "expiration": receipt_id},
+        )
 
     def terminate(
         self,
@@ -389,21 +421,17 @@ class EphemeralContractRegistry:
         contract = self._require(contract_id)
         if contract.status not in {
             EphemeralAgentStatus.ACTIVE,
-            EphemeralAgentStatus.SUSPENDED,
             EphemeralAgentStatus.EXPIRED,
         }:
             raise ValueError("contract cannot be terminated from its current state")
         lifecycle = contract.lifecycle.model_copy(update={"terminated_at": now})
-        updated = contract.model_copy(
-            update={
-                "status": EphemeralAgentStatus.TERMINATED,
-                "lifecycle": lifecycle,
-                "termination_reason": reason,
-                "receipt_ids": {**contract.receipt_ids, "termination": receipt_id},
-            }
+        return self._replace(
+            contract,
+            status=EphemeralAgentStatus.TERMINATED,
+            lifecycle=lifecycle,
+            termination_reason=reason,
+            receipt_ids={**contract.receipt_ids, "termination": receipt_id},
         )
-        self._contracts[contract_id] = updated
-        return updated
 
     def mark_deleted(
         self, contract_id: str, receipt_id: str, now: datetime | None = None
@@ -417,29 +445,21 @@ class EphemeralContractRegistry:
         }:
             raise ValueError("memory can only be marked deleted after closure")
         lifecycle = contract.lifecycle.model_copy(update={"deleted_at": now})
-        updated = contract.model_copy(
-            update={
-                "status": EphemeralAgentStatus.DELETED,
-                "lifecycle": lifecycle,
-                "receipt_ids": {**contract.receipt_ids, "deletion": receipt_id},
-            }
+        return self._replace(
+            contract,
+            status=EphemeralAgentStatus.DELETED,
+            lifecycle=lifecycle,
+            receipt_ids={**contract.receipt_ids, "deletion": receipt_id},
         )
-        self._contracts[contract_id] = updated
-        return updated
 
-    def expire_due(self, now: datetime | None = None) -> list[str]:
-        now = _require_aware(now or utcnow(), "now")
-        expired: list[str] = []
-        for contract_id, contract in list(self._contracts.items()):
-            if (
-                contract.status == EphemeralAgentStatus.ACTIVE
-                and now >= contract.lifecycle.expires_at
-            ):
-                self._contracts[contract_id] = contract.model_copy(
-                    update={"status": EphemeralAgentStatus.EXPIRED}
-                )
-                expired.append(contract_id)
-        return expired
+    def _replace(
+        self, contract: IsolatedEphemeralAgentContract, **updates: Any
+    ) -> IsolatedEphemeralAgentContract:
+        payload = contract.model_dump()
+        payload.update(updates)
+        updated = IsolatedEphemeralAgentContract.model_validate(payload)
+        self._contracts[contract.contract_id] = updated
+        return updated
 
     def _require(self, contract_id: str) -> IsolatedEphemeralAgentContract:
         contract = self._contracts.get(contract_id)
