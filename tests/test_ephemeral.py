@@ -162,10 +162,27 @@ def test_active_status_requires_activation_receipt() -> None:
         make_contract(status=EphemeralAgentStatus.ACTIVE)
 
 
+def test_deleted_status_requires_prior_closure_proof() -> None:
+    lifecycle = LifecycleWindow(
+        created_at=BASE,
+        activate_by=BASE + timedelta(minutes=1),
+        expires_at=BASE + timedelta(minutes=10),
+        deletion_due_at=BASE + timedelta(minutes=11),
+        deleted_at=BASE + timedelta(minutes=11),
+    )
+    with pytest.raises(ValueError, match="prior closure receipt"):
+        make_contract(
+            status=EphemeralAgentStatus.DELETED,
+            lifecycle=lifecycle,
+            receipt_ids={"deletion": "receipt-zero-mem"},
+        )
+
+
 def test_activation_and_execution_binding_remain_separate_from_authorization() -> None:
     registry = EphemeralContractRegistry()
     registry.register(make_contract())
-    active = registry.activate("iac-001", "receipt-activation", BASE + timedelta(seconds=30))
+    activated_at = BASE + timedelta(seconds=30)
+    active = registry.activate("iac-001", "receipt-activation", activated_at)
 
     result = registry.verify_execution_binding(
         "iac-001",
@@ -176,6 +193,7 @@ def test_activation_and_execution_binding_remain_separate_from_authorization() -
     )
 
     assert active.status == EphemeralAgentStatus.ACTIVE
+    assert active.lifecycle.activated_at == activated_at
     assert result["valid"] is True
     assert result["requires_per_action_authorization"] is True
     assert result["racs_decision_id"] == "racs-001"
