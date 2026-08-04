@@ -211,6 +211,7 @@ class LifecycleWindow(BaseModel):
     activate_by: datetime
     expires_at: datetime
     deletion_due_at: datetime
+    activated_at: datetime | None = None
     revoked_at: datetime | None = None
     expired_at: datetime | None = None
     terminated_at: datetime | None = None
@@ -221,6 +222,7 @@ class LifecycleWindow(BaseModel):
         "activate_by",
         "expires_at",
         "deletion_due_at",
+        "activated_at",
         "revoked_at",
         "expired_at",
         "terminated_at",
@@ -238,6 +240,10 @@ class LifecycleWindow(BaseModel):
             raise ValueError("lifecycle must satisfy created_at < activate_by <= expires_at")
         if self.deletion_due_at < self.expires_at:
             raise ValueError("deletion_due_at cannot precede expires_at")
+        if self.activated_at is not None and not (
+            self.created_at <= self.activated_at <= self.activate_by
+        ):
+            raise ValueError("activated_at is outside the activation window")
         return self
 
 
@@ -278,7 +284,7 @@ class IsolatedEphemeralAgentContract(BaseModel):
             raise ValueError("the agent cannot be its own principal")
 
         requirements = {
-            EphemeralAgentStatus.ACTIVE: ("activation", None),
+            EphemeralAgentStatus.ACTIVE: ("activation", self.lifecycle.activated_at),
             EphemeralAgentStatus.REVOKED: ("revocation", self.lifecycle.revoked_at),
             EphemeralAgentStatus.EXPIRED: ("expiration", self.lifecycle.expired_at),
             EphemeralAgentStatus.TERMINATED: (
@@ -291,8 +297,21 @@ class IsolatedEphemeralAgentContract(BaseModel):
             receipt_name, timestamp = requirements[self.status]
             if receipt_name not in self.receipt_ids:
                 raise ValueError(f"{self.status.value} status requires {receipt_name} receipt")
-            if self.status != EphemeralAgentStatus.ACTIVE and timestamp is None:
+            if timestamp is None:
                 raise ValueError(f"{self.status.value} status requires lifecycle timestamp")
+
+        if self.status == EphemeralAgentStatus.DELETED:
+            closure_receipts = {"revocation", "expiration", "termination"}
+            if not closure_receipts.intersection(self.receipt_ids):
+                raise ValueError("deleted status requires a prior closure receipt")
+            if not any(
+                (
+                    self.lifecycle.revoked_at,
+                    self.lifecycle.expired_at,
+                    self.lifecycle.terminated_at,
+                )
+            ):
+                raise ValueError("deleted status requires a prior closure timestamp")
         return self
 
     def digest(self) -> str:
@@ -328,9 +347,11 @@ class EphemeralContractRegistry:
             raise ValueError("only draft contracts can be activated")
         if now < contract.lifecycle.created_at or now > contract.lifecycle.activate_by:
             raise ValueError("activation is outside the allowed window")
+        lifecycle = contract.lifecycle.model_copy(update={"activated_at": now})
         return self._replace(
             contract,
             status=EphemeralAgentStatus.ACTIVE,
+            lifecycle=lifecycle,
             receipt_ids={**contract.receipt_ids, "activation": receipt_id},
         )
 
