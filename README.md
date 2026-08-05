@@ -1,34 +1,48 @@
 # Open Agent Contract
 
-Spesifikasjon og implementasjon av verifiserbare agentkontraktar.
-
-Knytt til REHT standardar, RACS bindingar, og **BO#42**.
+Specification and implementation of verifiable agent contracts linked to REHT, RACS and VALO execution governance.
 
 ## Features
 
-- **Contract Lifecycle** — DRAFT → PROPOSED → ACTIVE → SUSPENDED → TERMINATED
-- **Clause Management** — scope, authority, constraint, obligation, prohibition, permission clauses
-- **Enforcement Tracking** — record enforcements and violations per contract
-- **Integrity Verification** — verify contract state and REHT requirement compliance
-- **Contract Digest** — SHA-256 digest for signing and verification
+- Contract lifecycle: DRAFT → PROPOSED → ACTIVE → SUSPENDED → TERMINATED / EXPIRED
+- Clause management: scope, authority, constraints, obligations, prohibitions and permissions
+- Enforcement and violation records
+- Integrity verification and deterministic SHA-256 contract digests
+- Isolated Ephemeral Agent Contract for Need to Ask / Need to Acquire
 
-## Quick Start
+## Isolated Ephemeral Agent Contract
+
+`open_agent_contract.ephemeral` composes the existing VALO controls for a short-lived acquisition agent:
+
+- origin and delegation chain
+- validated Need to Ask / Need to Acquire binding
+- explicit sources, tools, resources and prohibited actions
+- isolated silo and gateway enforcement
+- operating-memory ownership, provenance, retention and deletion
+- minimal evidence delivery to the requesting agent
+- activation, revocation, expiration, termination and deletion receipts
+
+The registry verifies bindings and lifecycle only. It never replaces REHT authorization, the RACS decision contract, gateway enforcement or Veritas receipts.
+
+See `docs/isolated-ephemeral-agent-contract.md`.
+
+## Quick start
 
 ```bash
 pip install -e .
 pytest --tb=short
 ```
 
-## Contract Lifecycle
+## General contract lifecycle
 
-```
+```text
 DRAFT → PROPOSED → ACTIVE → SUSPENDED → TERMINATED
          ↓
-       (signatures required)
+       signatures
          ↓
-      ACTIVE → EXPIRED (if expires_at set)
+      ACTIVE → EXPIRED
 ```
 
-## REHT Integration
+## REHT integration
 
-Each clause can reference a REHT requirement ID, enabling traceability between agent contracts and governance requirements.
+Each general contract clause can reference a REHT requirement ID. The isolated ephemeral contract additionally binds the exact REHT clearance, RACS decision, gateway policy and Veritas stream used for the acquisition lifecycle.

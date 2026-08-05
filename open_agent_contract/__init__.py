@@ -1,7 +1,33 @@
-"""
-open-agent-contract — Spesifikasjon og implementasjon av verifiserbare agentkontraktar.
+"""Verifiable agent contracts for REHT/RACS-bound execution governance."""
 
-Linked to REHT standards, RACS bindings, and BO#42.
-"""
+from .ephemeral import (
+    AgentOrigin,
+    BoundedMandate,
+    DeliveryMode,
+    EphemeralAgentStatus,
+    EphemeralContractRegistry,
+    EvidenceDeliveryPolicy,
+    IsolatedEphemeralAgentContract,
+    IsolationBoundary,
+    IsolationClass,
+    LifecycleWindow,
+    NeedToAskAcquireBinding,
+    OperatingMemoryLease,
+)
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
+
+__all__ = [
+    "AgentOrigin",
+    "BoundedMandate",
+    "DeliveryMode",
+    "EphemeralAgentStatus",
+    "EphemeralContractRegistry",
+    "EvidenceDeliveryPolicy",
+    "IsolatedEphemeralAgentContract",
+    "IsolationBoundary",
+    "IsolationClass",
+    "LifecycleWindow",
+    "NeedToAskAcquireBinding",
+    "OperatingMemoryLease",
+]
