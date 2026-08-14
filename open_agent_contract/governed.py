@@ -24,6 +24,11 @@ class ConformanceOutcome(str, Enum):
     EXPIRED = "expired"
 
 
+class ContinuationOutcome(str, Enum):
+    CURRENT = "current"
+    CONTRACT_CHANGED = "contract_changed"
+
+
 class PartyRef(BaseModel):
     party_id: str = Field(min_length=1)
     kind: str = Field(description="human, agent, service, organization, or other profile")
@@ -59,7 +64,7 @@ class CompletionCondition(BaseModel):
 class GovernedContract(BaseModel):
     """Portable contract describing the governed consequence boundary."""
 
-    spec_version: str = "1.0.0"
+    spec_version: str = "1.1.0"
     contract_id: str = Field(min_length=1)
     issuer: PartyRef
     subject: PartyRef
@@ -112,6 +117,7 @@ class ConformanceIssue(BaseModel):
 class ConformanceResult(BaseModel):
     outcome: ConformanceOutcome
     contract_id: str
+    contract_spec_version: str | None = None
     intent_id: str
     contract_digest: str
     checked_at: datetime
@@ -120,6 +126,18 @@ class ConformanceResult(BaseModel):
     @property
     def conformant(self) -> bool:
         return self.outcome == ConformanceOutcome.CONFORMANT
+
+
+class ContinuationResult(BaseModel):
+    outcome: ContinuationOutcome
+    contract_id: str
+    expected_contract_digest: str
+    current_contract_digest: str
+    requires_fresh_conformance: bool
+
+    @property
+    def current(self) -> bool:
+        return self.outcome == ContinuationOutcome.CURRENT
 
 
 def _utc(dt: datetime) -> datetime:
@@ -224,6 +242,37 @@ def check_conformance(
     return _result(ConformanceOutcome.CONFORMANT, contract, intent, now, [])
 
 
+def verify_contract_continuity(
+    prior: ConformanceResult,
+    current_contract: GovernedContract,
+) -> ContinuationResult:
+    """Verify that a prior conformance result still names the exact contract.
+
+    This checks contract identity/digest continuity only. A CURRENT result is not
+    execution authorization and does not replace fresh authority/state checks.
+    Legacy results without a contract spec version fail closed into fresh
+    conformance rather than failing deserialization.
+    """
+
+    current_digest = current_contract.digest()
+    changed = (
+        prior.contract_id != current_contract.contract_id
+        or prior.contract_spec_version != current_contract.spec_version
+        or prior.contract_digest != current_digest
+    )
+    return ContinuationResult(
+        outcome=(
+            ContinuationOutcome.CONTRACT_CHANGED
+            if changed
+            else ContinuationOutcome.CURRENT
+        ),
+        contract_id=current_contract.contract_id,
+        expected_contract_digest=prior.contract_digest,
+        current_contract_digest=current_digest,
+        requires_fresh_conformance=changed,
+    )
+
+
 def _result(
     outcome: ConformanceOutcome,
     contract: GovernedContract,
@@ -234,6 +283,7 @@ def _result(
     return ConformanceResult(
         outcome=outcome,
         contract_id=contract.contract_id,
+        contract_spec_version=contract.spec_version,
         intent_id=intent.intent_id,
         contract_digest=contract.digest(),
         checked_at=checked_at,
