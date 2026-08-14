@@ -87,6 +87,7 @@ def evaluate_a2a_consequence(
     return ConformanceResult(
         outcome=ConformanceOutcome.NON_CONFORMANT,
         contract_id=contract.contract_id,
+        contract_spec_version=contract.spec_version,
         intent_id=intent.intent_id,
         contract_digest=contract.digest(),
         checked_at=now,
