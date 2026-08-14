@@ -2,6 +2,8 @@
 
 Vendor-neutral contracts for governed agent consequence.
 
+> **Publication status — 2026-08-14:** this GitHub repository is currently **private**. The contract format and reference implementation are intended for open-source release under the MIT License, but they MUST NOT be described as publicly accessible until repository visibility is actually changed. See [`PUBLICATION_STATUS.md`](PUBLICATION_STATUS.md).
+
 The project defines a portable Governed Contract for describing who may attempt what action, on which resource, for which purpose, under which authority, evidence, constraints and validity window.
 
 It is designed for A2A and human-to-agent interoperability. It does not require a specific model, agent framework, identity provider, transport, policy engine or execution-governance product.
@@ -53,6 +55,18 @@ execution / settlement
 receipt / evidence
 ```
 
+## Relationship to other governed-contract work
+
+This repository remains an independently usable portable contract/reference implementation.
+
+The exact canonical relationship between Open Agent Contract and VALO GCoP is **unresolved** as of 2026-08-14. They MUST NOT be described as aliases, replacements or parent/child profiles until that relationship is explicitly resolved.
+
+This uncertainty does not weaken the local contract invariant:
+
+```text
+conformance != execution authorization
+```
+
 ## Existing contract lifecycle
 
 The package also retains the original general and isolated ephemeral agent-contract implementation:
@@ -66,6 +80,8 @@ The package also retains the original general and isolated ephemeral agent-contr
 These modules remain backward compatible. Product-specific integrations are optional adapters, not requirements of the open Governed Contract.
 
 ## Quick start
+
+For authorized repository users while the repository remains private:
 
 ```bash
 pip install -e '.[test]'
@@ -118,6 +134,18 @@ result = check_conformance(contract, intent, checked_at=now)
 print(result.outcome)
 ```
 
+## Publication
+
+See [`PUBLICATION_STATUS.md`](PUBLICATION_STATUS.md) for the public-release gate and the distinction between:
+
+- open-source candidate;
+- public repository;
+- published open-source release.
+
+As of 2026-08-14, this repository is an **open-source candidate hosted privately**, not yet a publicly accessible open-source repository.
+
 ## License
 
-MIT. The open contract format and reference implementation are intended to be usable independently of any single vendor.
+MIT. The contract format and reference implementation are intended to be usable independently of any single vendor.
+
+The MIT license and actual GitHub repository visibility are independent facts; current visibility remains private until explicitly changed by a repository administrator.
