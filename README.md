@@ -2,7 +2,7 @@
 
 Vendor-neutral contracts for governed agent consequence.
 
-> **Publication status — 2026-08-14:** this GitHub repository is currently **private**. The contract format and reference implementation are intended for open-source release under the MIT License, but they MUST NOT be described as publicly accessible until repository visibility is actually changed. See [`PUBLICATION_STATUS.md`](PUBLICATION_STATUS.md).
+> **Publication status — 2026-08-14:** this GitHub repository is **public**. The contract format and reference implementation are available under the MIT License. See [`PUBLICATION_STATUS.md`](PUBLICATION_STATUS.md).
 
 The project defines a portable Governed Contract for describing who may attempt what action, on which resource, for which purpose, under which authority, evidence, constraints and validity window.
 
@@ -81,8 +81,6 @@ These modules remain backward compatible. Product-specific integrations are opti
 
 ## Quick start
 
-For authorized repository users while the repository remains private:
-
 ```bash
 pip install -e '.[test]'
 pytest --tb=short
@@ -136,16 +134,10 @@ print(result.outcome)
 
 ## Publication
 
-See [`PUBLICATION_STATUS.md`](PUBLICATION_STATUS.md) for the public-release gate and the distinction between:
+See [`PUBLICATION_STATUS.md`](PUBLICATION_STATUS.md) for the release-state vocabulary and publication checks.
 
-- open-source candidate;
-- public repository;
-- published open-source release.
-
-As of 2026-08-14, this repository is an **open-source candidate hosted privately**, not yet a publicly accessible open-source repository.
+As of 2026-08-14, this repository is a **public open-source repository**. A separately identified version/tag/package is still required before describing any exact snapshot as a published release artifact.
 
 ## License
 
 MIT. The contract format and reference implementation are intended to be usable independently of any single vendor.
-
-The MIT license and actual GitHub repository visibility are independent facts; current visibility remains private until explicitly changed by a repository administrator.
