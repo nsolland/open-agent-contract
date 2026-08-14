@@ -2,7 +2,12 @@
 
 Vendor-neutral contracts for governed agent consequence.
 
-> **Publication status — 2026-08-14:** this GitHub repository is **public**. The contract format and reference implementation are available under the MIT License. See [`PUBLICATION_STATUS.md`](PUBLICATION_STATUS.md).
+[![CI](https://github.com/nsolland/open-agent-contract/actions/workflows/ci.yml/badge.svg)](https://github.com/nsolland/open-agent-contract/actions/workflows/ci.yml)
+[![status](https://img.shields.io/badge/status-public%20release%20candidate-1f2937)](PUBLICATION_STATUS.md)
+[![version](https://img.shields.io/badge/version-0.3.0-1f2937)](CHANGELOG.md)
+[![license](https://img.shields.io/badge/license-MIT-1f2937)](LICENSE)
+
+> **Publication status — 2026-08-14:** this repository is public. The contract format and reference implementation are available under the MIT License. The current package line is `0.3.0`; see [`PUBLICATION_STATUS.md`](PUBLICATION_STATUS.md) for exact release state.
 
 The project defines a portable Governed Contract for describing who may attempt what action, on which resource, for which purpose, under which authority, evidence, constraints and validity window.
 
@@ -132,11 +137,16 @@ result = check_conformance(contract, intent, checked_at=now)
 print(result.outcome)
 ```
 
+## Project governance
+
+- [`CHANGELOG.md`](CHANGELOG.md) — version history
+- [`CONTRIBUTING.md`](CONTRIBUTING.md) — contribution rules
+- [`SECURITY.md`](SECURITY.md) — vulnerability reporting
+- [`PUBLICATION_STATUS.md`](PUBLICATION_STATUS.md) — exact publication and release state
+
 ## Publication
 
-See [`PUBLICATION_STATUS.md`](PUBLICATION_STATUS.md) for the release-state vocabulary and publication checks.
-
-As of 2026-08-14, this repository is a **public open-source repository**. A separately identified version/tag/package is still required before describing any exact snapshot as a published release artifact.
+This repository is public and open source. A formal release is identified only by an exact version, tag and commit hash; repository visibility by itself is not a release claim.
 
 ## License
 
