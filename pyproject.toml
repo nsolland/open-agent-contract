@@ -1,6 +1,6 @@
 [project]
 name = "open-agent-contract"
-version = "0.3.0"
+version = "0.4.0"
 description = "Vendor-neutral contracts for governed agent consequence and A2A interoperability."
 authors = [{name = "Open Agent Contract contributors"}]
 license = {text = "MIT"}

@@ -4,10 +4,13 @@ from open_agent_contract.governed import (
     ActionIntent,
     AuthorityGrant,
     ConformanceOutcome,
+    ConformanceResult,
+    ContinuationOutcome,
     EvidenceRequirement,
     GovernedContract,
     PartyRef,
     check_conformance,
+    verify_contract_continuity,
 )
 
 
@@ -60,9 +63,11 @@ def _intent(now: datetime) -> ActionIntent:
 
 def test_conformant_intent():
     now = datetime.now(timezone.utc)
-    result = check_conformance(_contract(now), _intent(now), checked_at=now)
+    contract = _contract(now)
+    result = check_conformance(contract, _intent(now), checked_at=now)
     assert result.outcome == ConformanceOutcome.CONFORMANT
     assert result.conformant is True
+    assert result.contract_spec_version == "1.1.0"
     assert len(result.contract_digest) == 64
 
 
@@ -128,3 +133,50 @@ def test_digest_is_deterministic():
     a = _contract(now)
     b = GovernedContract.model_validate(a.model_dump())
     assert a.digest() == b.digest()
+
+
+def test_unchanged_contract_continuation_is_current():
+    now = datetime.now(timezone.utc)
+    contract = _contract(now)
+    prior = check_conformance(contract, _intent(now), checked_at=now)
+    result = verify_contract_continuity(prior, contract)
+    assert result.outcome == ContinuationOutcome.CURRENT
+    assert result.current is True
+    assert result.requires_fresh_conformance is False
+
+
+def test_changed_contract_invalidates_prior_continuation():
+    now = datetime.now(timezone.utc)
+    original = _contract(now)
+    prior = check_conformance(original, _intent(now), checked_at=now)
+    amended = GovernedContract.model_validate(original.model_dump())
+    amended.allowed_resources.append("catalog:item-99")
+    result = verify_contract_continuity(prior, amended)
+    assert result.outcome == ContinuationOutcome.CONTRACT_CHANGED
+    assert result.current is False
+    assert result.requires_fresh_conformance is True
+    assert result.expected_contract_digest != result.current_contract_digest
+
+
+def test_contract_id_replacement_invalidates_prior_continuation():
+    now = datetime.now(timezone.utc)
+    original = _contract(now)
+    prior = check_conformance(original, _intent(now), checked_at=now)
+    replacement = GovernedContract.model_validate(original.model_dump())
+    replacement.contract_id = "gc-2"
+    result = verify_contract_continuity(prior, replacement)
+    assert result.outcome == ContinuationOutcome.CONTRACT_CHANGED
+    assert result.requires_fresh_conformance is True
+
+
+def test_legacy_result_without_spec_version_requires_fresh_conformance():
+    now = datetime.now(timezone.utc)
+    contract = _contract(now)
+    current = check_conformance(contract, _intent(now), checked_at=now)
+    legacy_payload = current.model_dump()
+    legacy_payload.pop("contract_spec_version")
+    legacy = ConformanceResult.model_validate(legacy_payload)
+    result = verify_contract_continuity(legacy, contract)
+    assert legacy.contract_spec_version is None
+    assert result.outcome == ContinuationOutcome.CONTRACT_CHANGED
+    assert result.requires_fresh_conformance is True

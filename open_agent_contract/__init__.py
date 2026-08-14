@@ -21,10 +21,13 @@ from .governed import (
     ConformanceIssue,
     ConformanceOutcome,
     ConformanceResult,
+    ContinuationOutcome,
+    ContinuationResult,
     EvidenceRequirement,
     GovernedContract,
     PartyRef,
     check_conformance,
+    verify_contract_continuity,
 )
 from .ephemeral import (
     AgentOrigin,
@@ -41,7 +44,7 @@ from .ephemeral import (
     OperatingMemoryLease,
 )
 
-__version__ = "0.3.0"
+__version__ = "0.4.0"
 
 __all__ = [
     "A2A_GOVERNED_CONTRACT_EXTENSION_URI", "A2AGovernedContractExtension",
@@ -51,7 +54,9 @@ __all__ = [
     "project_verified_aps_authority",
     "ActionIntent", "AuthorityGrant", "CompletionCondition",
     "ConformanceIssue", "ConformanceOutcome", "ConformanceResult",
-    "EvidenceRequirement", "GovernedContract", "PartyRef", "check_conformance",
+    "ContinuationOutcome", "ContinuationResult", "EvidenceRequirement",
+    "GovernedContract", "PartyRef", "check_conformance",
+    "verify_contract_continuity",
     "AgentOrigin", "BoundedMandate", "DeliveryMode", "EphemeralAgentStatus",
     "EphemeralContractRegistry", "EvidenceDeliveryPolicy",
     "IsolatedEphemeralAgentContract", "IsolationBoundary", "IsolationClass",
