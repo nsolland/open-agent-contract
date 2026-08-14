@@ -1,5 +1,11 @@
 """Open Agent Contract public API."""
 
+from .a2a import (
+    A2A_GOVERNED_CONTRACT_EXTENSION_URI,
+    A2AGovernedContractExtension,
+    evaluate_a2a_consequence,
+    to_a2a_extension,
+)
 from .governed import (
     ActionIntent,
     AuthorityGrant,
@@ -30,6 +36,8 @@ from .ephemeral import (
 __version__ = "0.3.0"
 
 __all__ = [
+    "A2A_GOVERNED_CONTRACT_EXTENSION_URI", "A2AGovernedContractExtension",
+    "evaluate_a2a_consequence", "to_a2a_extension",
     "ActionIntent", "AuthorityGrant", "CompletionCondition",
     "ConformanceIssue", "ConformanceOutcome", "ConformanceResult",
     "EvidenceRequirement", "GovernedContract", "PartyRef", "check_conformance",
