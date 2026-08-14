@@ -1,48 +1,123 @@
 # Open Agent Contract
 
-Specification and implementation of verifiable agent contracts linked to REHT, RACS and VALO execution governance.
+Vendor-neutral contracts for governed agent consequence.
 
-## Features
+The project defines a portable Governed Contract for describing who may attempt what action, on which resource, for which purpose, under which authority, evidence, constraints and validity window.
 
-- Contract lifecycle: DRAFT → PROPOSED → ACTIVE → SUSPENDED → TERMINATED / EXPIRED
-- Clause management: scope, authority, constraints, obligations, prohibitions and permissions
-- Enforcement and violation records
-- Integrity verification and deterministic SHA-256 contract digests
-- Isolated Ephemeral Agent Contract for Need to Ask / Need to Acquire
+It is designed for A2A and human-to-agent interoperability. It does not require a specific model, agent framework, identity provider, transport, policy engine or execution-governance product.
 
-## Isolated Ephemeral Agent Contract
+## Governed Contract v1
 
-`open_agent_contract.ephemeral` composes the existing VALO controls for a short-lived acquisition agent:
+Core fields:
 
-- origin and delegation chain
-- validated Need to Ask / Need to Acquire binding
-- explicit sources, tools, resources and prohibited actions
-- isolated silo and gateway enforcement
-- operating-memory ownership, provenance, retention and deletion
-- minimal evidence delivery to the requesting agent
-- activation, revocation, expiration, termination and deletion receipts
+- issuer and subject identity references
+- explicit authority grants and delegation chain
+- allowed actions, resources and purposes
+- explicit prohibitions and constraints
+- evidence requirements with freshness bounds
+- validity window
+- completion conditions
+- downstream receipt requirement
+- vendor/domain extension namespace
 
-The registry verifies bindings and lifecycle only. It never replaces REHT authorization, the RACS decision contract, gateway enforcement or Veritas receipts.
+Deterministic conformance outcomes:
 
-See `docs/isolated-ephemeral-agent-contract.md`.
+- `conformant`
+- `non_conformant`
+- `insufficient_evidence`
+- `not_yet_valid`
+- `expired`
+
+A `conformant` result is not permission to execute. It means the intent satisfies the portable contract and may be submitted to a separate organization-controlled authorization/enforcement boundary.
+
+See `docs/governed-contract-v1.md` and `open_agent_contract.governed`.
+
+## Reference flow
+
+```text
+agent discovery / transport
+        |
+        v
+Governed Contract
+        |
+        v
+contract conformance
+        |
+        v
+organization-controlled authorization boundary
+        |
+        v
+execution / settlement
+        |
+        v
+receipt / evidence
+```
+
+## Existing contract lifecycle
+
+The package also retains the original general and isolated ephemeral agent-contract implementation:
+
+- DRAFT → PROPOSED → ACTIVE → SUSPENDED → TERMINATED / EXPIRED
+- scope, authority, constraints, obligations, prohibitions and permissions
+- enforcement and violation records
+- integrity verification and deterministic digests
+- isolated ephemeral contracts for bounded acquisition work
+
+These modules remain backward compatible. Product-specific integrations are optional adapters, not requirements of the open Governed Contract.
 
 ## Quick start
 
 ```bash
-pip install -e .
+pip install -e '.[test]'
 pytest --tb=short
 ```
 
-## General contract lifecycle
+```python
+from datetime import datetime, timedelta, timezone
+from open_agent_contract import (
+    ActionIntent,
+    AuthorityGrant,
+    GovernedContract,
+    PartyRef,
+    check_conformance,
+)
 
-```text
-DRAFT → PROPOSED → ACTIVE → SUSPENDED → TERMINATED
-         ↓
-       signatures
-         ↓
-      ACTIVE → EXPIRED
+now = datetime.now(timezone.utc)
+org = PartyRef(party_id="org:example", kind="organization")
+agent = PartyRef(party_id="agent:buyer", kind="agent")
+
+contract = GovernedContract(
+    contract_id="gc-1",
+    issuer=org,
+    subject=agent,
+    authority=[AuthorityGrant(
+        grant_id="g-1",
+        granted_by=org.party_id,
+        granted_to=agent.party_id,
+        actions=["purchase"],
+        resources=["catalog:item-42"],
+        purposes=["restock"],
+    )],
+    allowed_actions=["purchase"],
+    allowed_resources=["catalog:item-42"],
+    allowed_purposes=["restock"],
+    valid_from=now,
+    valid_until=now + timedelta(hours=1),
+)
+
+intent = ActionIntent(
+    intent_id="i-1",
+    actor=agent,
+    action="purchase",
+    resource="catalog:item-42",
+    purpose="restock",
+    requested_at=now,
+)
+
+result = check_conformance(contract, intent, checked_at=now)
+print(result.outcome)
 ```
 
-## REHT integration
+## License
 
-Each general contract clause can reference a REHT requirement ID. The isolated ephemeral contract additionally binds the exact REHT clearance, RACS decision, gateway policy and Veritas stream used for the acquisition lifecycle.
+MIT. The open contract format and reference implementation are intended to be usable independently of any single vendor.

@@ -1,8 +1,8 @@
 [project]
 name = "open-agent-contract"
-version = "0.2.0"
-description = "Verifiable agent contracts for REHT/RACS-bound execution governance."
-authors = [{name = "nsolland"}]
+version = "0.3.0"
+description = "Vendor-neutral contracts for governed agent consequence and A2A interoperability."
+authors = [{name = "Open Agent Contract contributors"}]
 license = {text = "MIT"}
 requires-python = ">=3.11"
 dependencies = [

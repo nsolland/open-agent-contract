@@ -1,5 +1,17 @@
-"""Verifiable agent contracts for REHT/RACS-bound execution governance."""
+"""Open Agent Contract public API."""
 
+from .governed import (
+    ActionIntent,
+    AuthorityGrant,
+    CompletionCondition,
+    ConformanceIssue,
+    ConformanceOutcome,
+    ConformanceResult,
+    EvidenceRequirement,
+    GovernedContract,
+    PartyRef,
+    check_conformance,
+)
 from .ephemeral import (
     AgentOrigin,
     BoundedMandate,
@@ -15,19 +27,14 @@ from .ephemeral import (
     OperatingMemoryLease,
 )
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 __all__ = [
-    "AgentOrigin",
-    "BoundedMandate",
-    "DeliveryMode",
-    "EphemeralAgentStatus",
-    "EphemeralContractRegistry",
-    "EvidenceDeliveryPolicy",
-    "IsolatedEphemeralAgentContract",
-    "IsolationBoundary",
-    "IsolationClass",
-    "LifecycleWindow",
-    "NeedToAskAcquireBinding",
-    "OperatingMemoryLease",
+    "ActionIntent", "AuthorityGrant", "CompletionCondition",
+    "ConformanceIssue", "ConformanceOutcome", "ConformanceResult",
+    "EvidenceRequirement", "GovernedContract", "PartyRef", "check_conformance",
+    "AgentOrigin", "BoundedMandate", "DeliveryMode", "EphemeralAgentStatus",
+    "EphemeralContractRegistry", "EvidenceDeliveryPolicy",
+    "IsolatedEphemeralAgentContract", "IsolationBoundary", "IsolationClass",
+    "LifecycleWindow", "NeedToAskAcquireBinding", "OperatingMemoryLease",
 ]
