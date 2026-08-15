@@ -44,7 +44,7 @@ from .ephemeral import (
     OperatingMemoryLease,
 )
 
-__version__ = "0.4.0"
+__version__ = "0.4.0.post1"
 
 __all__ = [
     "A2A_GOVERNED_CONTRACT_EXTENSION_URI", "A2AGovernedContractExtension",
