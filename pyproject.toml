@@ -1,13 +1,39 @@
 [project]
 name = "open-agent-contract"
-version = "0.4.0"
-description = "Vendor-neutral contracts for governed agent consequence and A2A interoperability."
+version = "0.4.0.post1"
+description = "Vendor-neutral Governed Contracts for verifiable agent authority, constraints, conformance and consequence."
+readme = "README.md"
 authors = [{name = "Open Agent Contract contributors"}]
-license = {text = "MIT"}
+maintainers = [{name = "Open Agent Contract maintainers"}]
+license = "MIT"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
+keywords = [
+    "agent-governance",
+    "ai-agents",
+    "a2a",
+    "authorization",
+    "conformance",
+    "execution-governance",
+    "governed-contracts",
+    "open-agent-contract",
+]
 dependencies = [
     "pydantic>=2.5.0",
     "cryptography>=41.0.0",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
 ]
 
 [project.optional-dependencies]
@@ -16,9 +42,19 @@ test = [
     "pytest-cov>=4.1.0",
 ]
 
+[project.urls]
+Homepage = "https://reht.valoresearch.org"
+Source = "https://github.com/nsolland/open-agent-contract"
+Documentation = "https://github.com/nsolland/open-agent-contract/blob/main/README.md"
+Issues = "https://github.com/nsolland/open-agent-contract/issues"
+Security = "https://github.com/nsolland/open-agent-contract/blob/main/SECURITY.md"
+
 [build-system]
 requires = ["setuptools>=68.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["open_agent_contract*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
