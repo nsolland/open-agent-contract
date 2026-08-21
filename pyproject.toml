@@ -3,8 +3,8 @@ name = "open-agent-contract"
 version = "0.4.0.post1"
 description = "Vendor-neutral Governed Contracts for verifiable agent authority, constraints, conformance and consequence."
 readme = "README.md"
-authors = [{name = "Open Agent Contract contributors"}]
-maintainers = [{name = "Open Agent Contract maintainers"}]
+authors = [{name = "Njål Gaute Solland"}]
+maintainers = [{name = "Njål Gaute Solland"}]
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
