@@ -7,3 +7,4 @@
 - owned files: open_agent_contract/models.py, docs/inferred-party-model-clause.md, tests/test_contract.py
 - dependencies: existing person-model clause; PEACE sovereignty profile
 - non-goal: asserting AI legal personhood or human-equivalent rights
+- claim status: active
