@@ -43,6 +43,13 @@ from .ephemeral import (
     NeedToAskAcquireBinding,
     OperatingMemoryLease,
 )
+from .rights import (
+    RightsEvidenceStatus,
+    RightsUseDecision,
+    RightsUseEvaluation,
+    RightsUseProof,
+    evaluate_rights_use,
+)
 
 __version__ = "0.4.0.post1"
 
@@ -61,4 +68,6 @@ __all__ = [
     "EphemeralContractRegistry", "EvidenceDeliveryPolicy",
     "IsolatedEphemeralAgentContract", "IsolationBoundary", "IsolationClass",
     "LifecycleWindow", "NeedToAskAcquireBinding", "OperatingMemoryLease",
+    "RightsEvidenceStatus", "RightsUseDecision", "RightsUseEvaluation",
+    "RightsUseProof", "evaluate_rights_use",
 ]
