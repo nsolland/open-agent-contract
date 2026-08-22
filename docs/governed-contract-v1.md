@@ -30,6 +30,23 @@ Files, memory, configuration, instructions, handoffs or cached artifacts that su
 
 If such material is required evidence, it must be supplied through the contract's evidence surface with the provenance/freshness required by the relevant profile. Worker-produced material cannot silently self-promote into a contract, authority grant or required evidence.
 
+## Person-model sovereignty
+
+A human-AI or agent contract may include a `person_model` clause when the relationship can derive, retain or use materially person-specific cognitive, behavioural, preference, response-prediction or simulation state.
+
+The clause is a separate authority surface. Ordinary permission to perform a task does not imply permission to construct or exploit a persistent model of the principal.
+
+Normative requirements:
+
+- derivation does not create authority;
+- predicted approval is not consent, delegation or standing;
+- assisting, predicting, personalizing, simulating, influencing and sharing are distinct use classes;
+- restrictions and revocation follow materially person-specific descendants;
+- individualized political influence optimized against a person-model is prohibited;
+- predictive fidelity never makes the model the principal or an authority root.
+
+The standard clause and parameter vocabulary are defined in `docs/inferred-person-model-clause.md`.
+
 ## Versioning
 
 Governed Contract wire semantics are `1.1.0` for this additive continuity revision. The Python package is independently versioned as `0.4.0` because the package remains pre-1.0.
