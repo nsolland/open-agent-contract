@@ -29,6 +29,7 @@ class ContractClause(str, Enum):
     PERMISSION = "permission"
     ESCALATION = "escalation"
     TERMINATION = "termination"
+    PERSON_MODEL = "person_model"
 
 
 class ContractParty(BaseModel):
